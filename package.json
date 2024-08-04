@@ -11,9 +11,22 @@
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "connect-redis": "^7.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "mongoose": "^8.4.4",
+    "multer": "^1.4.5-lts.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "redis": "^4.6.15"
+  },
   "bugs": {
     "url": "https://github.com/urustin/luna_server2_node/issues"
   },
   "homepage": "https://github.com/urustin/luna_server2_node#readme",
-  "description": ""
+  "description": "",
+  "type": "module"
 }
