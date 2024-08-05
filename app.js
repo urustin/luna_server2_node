@@ -5,6 +5,9 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import cors from 'cors';
 import connectDB from './config/database.js';
 import dotenv from 'dotenv';
+import weeklyCheckerRoutes from './routes/weeklyChecker.js';
+
+
 dotenv.config();
 
 
@@ -20,8 +23,8 @@ app.use(
       methods: ['GET', 'POST'],
       credentials: true,
     })
-  );
-
+);
+app.use(express.json({ extended: true }));
 
 
   // MongoDB 연결
@@ -29,6 +32,9 @@ connectDB();
 
 // app.use(passport.initialize());
 // app.use(passport.session());
+
+
+app.use('/weeklyChecker', weeklyCheckerRoutes);
 
 const PORT = process.env.PORT || 5103;
 
