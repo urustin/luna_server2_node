@@ -36,6 +36,17 @@ connectDB();
 
 app.use('/weeklyChecker', weeklyCheckerRoutes);
 
+app.get('/', async (req, res) => {
+  res.send("AAAA");
+});
+app.get('/luna', async (req, res) => {
+  res.send("BBBB");
+});
+
+
+
+
+
 const PORT = process.env.PORT || 5103;
 
 if (process.env.NODE_ENV !== 'production') {
