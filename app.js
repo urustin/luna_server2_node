@@ -9,14 +9,13 @@ import weeklyCheckerRoutes from './routes/weeklyChecker.js';
 
 
 dotenv.config();
-// aatestasdfasfdasdfasf123122112
 
 const app = express();
 
 app.use(
     cors({
       origin: [
-        'https://typora-web.vercel.app',
+        'https://luna-client.vercel.app',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
       ],
