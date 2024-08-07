@@ -9,7 +9,7 @@ import weeklyCheckerRoutes from './routes/weeklyChecker.js';
 
 
 dotenv.config();
-// aatestasdfasfdasdfasf
+// aatestasdfasfdasdfasf123122112
 
 const app = express();
 
