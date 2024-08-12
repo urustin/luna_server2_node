@@ -9,13 +9,13 @@ import weeklyCheckerRoutes from './routes/weeklyChecker.js';
 
 
 dotenv.config();
-// aaaa
+
 const app = express();
 
 app.use(
     cors({
       origin: [
-        'https://luna-clien.vercel.app',
+        'https://luna-client.vercel.app',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
       ],
@@ -36,7 +36,7 @@ connectDB();
 app.use('/weeklyChecker', weeklyCheckerRoutes);
 
 app.get('/', async (req, res) => {
-  res.send("AAAAA");
+  res.send("AAAAAA");
 });
 app.get('/luna', async (req, res) => {
   res.send("BBBB");
