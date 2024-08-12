@@ -15,7 +15,7 @@ const app = express();
 app.use(
     cors({
       origin: [
-        'https://luna-client.vercel.app',
+        'https://luna-clien.vercel.app',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
       ],
@@ -36,7 +36,7 @@ connectDB();
 app.use('/weeklyChecker', weeklyCheckerRoutes);
 
 app.get('/', async (req, res) => {
-  res.send("AAAA");
+  res.send("AAAAA");
 });
 app.get('/luna', async (req, res) => {
   res.send("BBBB");
