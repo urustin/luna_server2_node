@@ -8,15 +8,14 @@ import { imgbox } from 'imgbox-js';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import cron from 'node-cron';
+import { getNextMonday, formatDate } from '../utils/date.js';
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/download', async (req, res) => {
     try {
-      console.log("download request");
-      // Retrieve all documents from the User collection
-      const users = await User.find({});
-      // Send the retrieved documents as a JSON response
-      res.json(users);
+      await res.json(req.user);
     } catch (error) {
       // Log any errors that occur
       console.error("Error retrieving data from MongoDB:", error);
@@ -26,17 +25,37 @@ router.get('/download', async (req, res) => {
     }
 });
 
+router.get('/download-all', async (req, res) => {
+  try {
+    console.log("download request");
+    const users = await User.find({});
+    await res.json(users);
+  } catch (error) {
+    // Log any errors that occur
+    console.error("Error retrieving data from MongoDB:", error);
 
-router.post('/upload', async (req, res) => {
+    // Send an error response with status code 500
+    res.status(500).json({ error: "Failed to retrieve data from MongoDB" });
+  }
+});
+
+
+
+router.put('/upload', async (req, res) => {
     try {
-        // console.log("Received data:", req.body);
-        // Clear existing data
-        await User.deleteMany({});
+      console.log("up");
 
-        // Insert new data
-        const result = await User.insertMany(req.body);
-        console.log(result);
-        res.json({ message: `${result.length} documents were inserted` });
+      const username = req.user.username;
+        const user = await User.findOne({ username });
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        user.weeks = req.body.weeks;
+        // console.log(user);
+        await user.save();
+        res.json({ message: "User data updated successfully" });
+        // res.json({ message: `${result.length} documents were inserted` });
     } catch (error) {
         console.error("Error uploading to MongoDB:", error);
         res.status(500).json({ error: "Failed to upload data to MongoDB" });
@@ -82,7 +101,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
             comments_enabled: 0,
             content_type: 0,
             is_family_safe: true,
-            thumb_size: '350r',
+            thumb_size: '150r',
         };
 
         const result = await imgbox(tempFilePath, uploadOptions);
@@ -106,7 +125,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
         await newPost.save();
 
         // Update user data in MongoDB (mark task as completed)
-        const updatedUser = await User.findOne({ name: username });
+        const updatedUser = await User.findOne({ username: username });
         if (!updatedUser) {
             throw new Error("User not found");
         }
@@ -165,98 +184,113 @@ router.get('/get-image', async (req, res) => {
 
 router.post('/delete-image', async (req, res) => {
   const { username, task, date, password } = req.body;
-  console.log("password +" +password);
+  console.log("password: " + password);
+
   try {
-    // First, find the user and get their password hash
-    const post = await Post.findOne({ username: username, task:task, date:date });
-    if (!post) {
+  //   // Find the post and verify password
+  //   const post = await Post.findOne({ username, task, date });
+  //   if (!post) {
+  //     return res.status(404).json({ error: 'Post not found' });
+  //   }
+  //   console.log(post);
+    
+  //   if (password !== post.password) {
+  //     return res.status(401).json({ error: 'Invalid password' });
+  //   }
+
+  //   // Delete the post
+  //   await Post.findOneAndDelete({ username, task, date });
+
+    // Find the user
+    const user = await User.findOne({ name: username });
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    console.log(post);
-    
-    if(password === post.password){
 
-      // Delete the post
-    const pass = await Post.findOneAndDelete({ username, task, date });
-    console.log(pass);
-    console.log("post password +" +pass.password);
-    // Calculate the day of the week (0-6, where 0 is Sunday)
-    const dayOfWeek = new Date(date).getDay();
-    // Convert to 0-6 where 0 is Monday
-    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    // Update user data to uncheck the task
-    const result = await User.updateOne(
-      { name: username },
-      [
-        {
-          $set: {
-            weeks: {
-              $map: {
-                input: "$weeks",
-                as: "week",
-                in: {
-                  $mergeObjects: [
-                    "$$week",
-                    {
-                      tasks: {
-                        $map: {
-                          input: "$$week.tasks",
-                          as: "task",
-                          in: {
-                            $cond: [
-                              { $and: [
-                                { $eq: ["$$task.name", task] },
-                                { $lte: ["$$week.startDate", new Date(date)] },
-                                { $gt: [{ $add: [{ $dateFromString: { dateString: "$$week.startDate" } }, 7 * 24 * 60 * 60 * 1000] }, new Date(date)] }
-                              ]},
-                              {
-                                $mergeObjects: [
-                                  "$$task",
-                                  {
-                                    days: {
-                                      $map: {
-                                        input: { $range: [0, 7] },
-                                        as: "i",
-                                        in: {
-                                          $cond: [
-                                            { $eq: ["$$i", dayIndex] },
-                                            false,
-                                            { $arrayElemAt: ["$$task.days", "$$i"] }
-                                          ]
-                                        }
-                                      }
-                                    }
-                                  }
-                                ]
-                              },
-                              "$$task"
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      ]
+    // Find the correct week and task
+    const validDate = new Date(date);
+    const weekIndex = user.weeks.findIndex(week => 
+      new Date(week.startDate) <= validDate && 
+      new Date(week.startDate).getTime() + 7 * 24 * 60 * 60 * 1000 > validDate.getTime()
     );
-    res.json({ message: 'Image deleted and task unchecked successfully' });
 
-
-    }else{
-      return res.status(401).json({ error: 'Invalid password' });
+    if (weekIndex === -1) {
+      throw new Error("No matching week found for the given date");
     }
 
-    
+    const taskIndex = user.weeks[weekIndex].tasks.findIndex(t => t.name === task);
+    if (taskIndex === -1) {
+      throw new Error("Task not found in the specified week");
+    }
+
+    // Calculate the day index (0-6, where 0 is Monday)
+    const dayIndex = validDate.getDay() === 0 ? 6 : validDate.getDay() - 1;
+
+    // Uncheck the task
+    user.weeks[weekIndex].tasks[taskIndex].days[dayIndex] = false;
+
+    // Save the updated user
+    await user.save();
+
+    res.json({ message: 'Image deleted and task unchecked successfully' });
   } catch (error) {
     console.error('Error deleting image:', error);
-    res.status(500).json({ error: 'Failed to delete image and uncheck task' });
+    res.status(500).json({ error: 'Failed to delete image and uncheck task: ' + error.message });
   }
 });
+
+
+
+
+
+  // New Cron Weeks
+const addNewWeekToAllUsers = async () => {
+  try {
+    const users = await User.find({});
+    const nextMonday = getNextMonday();
+
+    for (let user of users) {
+      if (user.weeks.length > 0) {
+        const lastWeek = user.weeks[user.weeks.length - 1];
+        const newWeek = {
+          startDate: formatDate(nextMonday),
+          tasks: lastWeek.tasks.map(task => ({
+            ...task,
+            days: [false, false, false, false, false, false, false]
+          }))
+        };
+        user.weeks.push(newWeek);
+        await user.save();
+      }
+    }
+    console.log('New week added to all users successfully');
+  } catch (error) {
+    console.error('Error adding new week to users:', error);
+  }
+};
+
+
+// 새로운 주를 추가하는 라우트
+router.post('/add-new-week', async (req, res) => {
+  try {
+    console.log("add Week Req");
+    await addNewWeekToAllUsers();
+    res.json({ message: 'New week added to all users successfully' });
+  } catch (error) {
+    console.error('Error in add-new-week route:', error);
+    res.status(500).json({ error: 'Failed to add new week to users' });
+  }
+});
+
+
+// Cron job 설정 (매주 일요일 자정에 실행)
+cron.schedule('0 0 * * 0', async () => {
+  console.log('Running weekly task to add new week');
+  await addNewWeekToAllUsers();
+}, {
+  timezone: "Asia/Seoul" // 서버의 시간대에 맞게 설정
+});
+
 
 
 
