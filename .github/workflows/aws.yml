@@ -36,10 +36,6 @@ jobs:
         USER: ubuntu  # or the appropriate username for your EC2 instance
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
-          mkdir -p ~/flaresolution/project/lunaEng &&
-          chmod 755 ~/flaresolution/project/lunaEng
-        '
         scp -o StrictHostKeyChecking=no -i private_key -r ./* ${USER}@${HOST}:~/flaresolution/project/lunaEng
         ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
           sh ~/gitwork.sh
