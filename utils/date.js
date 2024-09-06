@@ -7,7 +7,13 @@
  */
 const getNextMonday = (date = new Date()) => {
     const resultDate = new Date(date);
-    resultDate.setDate(date.getDate() + ((1 + 7 - date.getDay()) % 7 || 7));
+    resultDate.setDate(date.getDate() + ((1 + 0 - date.getDay()) % 7 || 7));
+    return resultDate;
+}
+
+const getPastMonday = (date = new Date()) => {
+    const resultDate = new Date(date);
+    resultDate.setDate(date.getDate() + ((1 + 0 - date.getDay()) % 7 ));
     return resultDate;
 }
   
