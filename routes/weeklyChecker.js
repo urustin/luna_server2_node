@@ -183,30 +183,32 @@ router.get('/get-image', async (req, res) => {
 // routes/weeklyChecker.js
 
 router.post('/delete-image', async (req, res) => {
+
   const { username, task, date, password } = req.body;
   console.log("password: " + password);
 
   try {
   //   // Find the post and verify password
-  //   const post = await Post.findOne({ username, task, date });
-  //   if (!post) {
-  //     return res.status(404).json({ error: 'Post not found' });
-  //   }
-  //   console.log(post);
+    const post = await Post.findOne({ username, task, date });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
     
-  //   if (password !== post.password) {
-  //     return res.status(401).json({ error: 'Invalid password' });
-  //   }
+    if (password !== post.password) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
 
-  //   // Delete the post
-  //   await Post.findOneAndDelete({ username, task, date });
-
+    // Delete the post
+    
+    await Post.findOneAndDelete({ username, task, date });
+    console.log("post deleted!");
     // Find the user
-    const user = await User.findOne({ name: username });
+    const user = await User.findOne({ username: username });
+    console.log(user);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
+    
     // Find the correct week and task
     const validDate = new Date(date);
     const weekIndex = user.weeks.findIndex(week => 
@@ -259,8 +261,14 @@ const addNewWeekToAllUsers = async () => {
             days: [false, false, false, false, false, false, false]
           }))
         };
-        user.weeks.push(newWeek);
-        await user.save();
+
+        if(lastWeek.startDate !== formatDate(nextMonday)){
+          user.weeks.push(newWeek);
+          await user.save();
+        }else{
+          console.log("failed!");
+        }
+        
       }
     }
     console.log('New week added to all users successfully');
