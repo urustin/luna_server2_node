@@ -2,7 +2,7 @@ import express from 'express';
 import passport from 'passport';
 
 import User from '../models/User.js';
-import { getNextMonday, formatDate } from '../utils/date.js';
+import { getCurrentMonday, formatDate } from '../utils/date.js';
 
 
 const router = express.Router();
@@ -19,9 +19,9 @@ router.post('/register', async (req, res) => {
     }
 
     const blankWeek = {
-      startDate: formatDate(getNextMonday()), // Current date
+      startDate: getCurrentMonday(), // Current date
       tasks: [
-        
+
       ]
     };
 
