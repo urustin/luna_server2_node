@@ -1,17 +1,26 @@
 // utils/date.js
 
+const getCurrentKST = () => {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const kstOffset = 9 * 60 * 60000;
+    return new Date(utc + kstOffset);
+};
+  
+
+
 /**
  * 주어진 날짜의 다음 주 월요일 날짜를 반환합니다.
  * @param {Date} date - 기준이 되는 날짜
  * @returns {Date} 다음 주 월요일의 날짜
  */
-const getNextMonday = (date = new Date()) => {
+const getNextMonday = (date = getCurrentKST()) => {
     const resultDate = new Date(date);
     resultDate.setDate(date.getDate() + (8 - date.getDay()) % 7 + 1);
     return formatDate(resultDate);
 }
 
-const getCurrentMonday = (date = new Date()) => {
+const getCurrentMonday = (date = getCurrentKST()) => {
     const resultDate = new Date(date);
     resultDate.setDate(date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1));
     return formatDate(resultDate);
