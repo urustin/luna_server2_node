@@ -7,14 +7,14 @@
  */
 const getNextMonday = (date = new Date()) => {
     const resultDate = new Date(date);
-    resultDate.setDate(date.getDate() + ((1 + 0 - date.getDay()) % 7 || 7));
-    return resultDate;
+    resultDate.setDate(date.getDate() + (8 - date.getDay()) % 7 + 1);
+    return formatDate(resultDate);
 }
 
-const getPastMonday = (date = new Date()) => {
+const getCurrentMonday = (date = new Date()) => {
     const resultDate = new Date(date);
-    resultDate.setDate(date.getDate() + ((1 + 0 - date.getDay()) % 7 ));
-    return resultDate;
+    resultDate.setDate(date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1));
+    return formatDate(resultDate);
 }
   
 /**
@@ -31,5 +31,6 @@ const formatDate = (date)=> {
 
 export {
     getNextMonday,
+    getCurrentMonday,
     formatDate,
 }
