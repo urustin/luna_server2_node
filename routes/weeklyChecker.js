@@ -10,6 +10,7 @@ import path from 'path';
 import os from 'os';
 import cron from 'node-cron';
 import { getNextMonday, formatDate } from '../utils/date.js';
+import sharp from 'sharp';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -67,7 +68,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
         return res.status(400).json({ error: "No file uploaded" });
     }
 
-    let tempDir, tempFilePath;
+    let tempDir, tempFilePath, resizedFilePath;
 
     try {
         const { username, task, date, password } = req.body;
@@ -88,10 +89,25 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
 
         console.log('Parsed date:', validDate); // Log the parsed date
 
-        // Create temporary file
+        // Create temporary directory
         tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'imgbox-'));
         tempFilePath = path.join(tempDir, req.file.originalname);
+        resizedFilePath = path.join(tempDir, 'resized-' + req.file.originalname);
+
+        // Write original file
         await fs.writeFile(tempFilePath, req.file.buffer);
+        
+        // Get image metadata
+        const metadata = await sharp(tempFilePath).metadata();
+
+        // Resize image to half of its original dimensions
+        await sharp(tempFilePath)
+            .resize({
+                width: Math.round(metadata.width / 3),
+                height: Math.round(metadata.height / 3)
+            })
+            .toFile(resizedFilePath);
+
 
         // Upload to imgbox with options
         console.log('Uploading image to imgbox...');
@@ -104,7 +120,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
             thumb_size: '150r',
         };
 
-        const result = await imgbox(tempFilePath, uploadOptions);
+        const result = await imgbox(resizedFilePath, uploadOptions);
         console.log('Imgbox upload result:', result);
 
         if (!result || !result.ok || !result.data || result.data.length === 0) {
