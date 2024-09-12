@@ -6,8 +6,6 @@ const getCurrentKST = () => {
     const kstOffset = 9 * 60 * 60000;
     return new Date(utc + kstOffset);
 };
-  
-
 
 /**
  * 주어진 날짜의 다음 주 월요일 날짜를 반환합니다.
