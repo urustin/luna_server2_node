@@ -12,6 +12,17 @@ import cron from 'node-cron';
 import { getNextMonday, formatDate } from '../utils/date.js';
 import sharp from 'sharp';
 
+
+async function removeDir(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  await Promise.all(entries.map((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    return entry.isDirectory() ? removeDir(fullPath) : fs.unlink(fullPath);
+  }));
+  await fs.rmdir(dir);
+}
+
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/download', async (req, res) => {
@@ -121,7 +132,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
         };
 
         const result = await imgbox(resizedFilePath, uploadOptions);
-        console.log('Imgbox upload result:', result);
+        // console.log('Imgbox upload result:', result);
 
         if (!result || !result.ok || !result.data || result.data.length === 0) {
             throw new Error("Failed to upload image to imgbox: " + JSON.stringify(result));
@@ -170,12 +181,20 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
         console.error("Error processing image upload:", error);
         res.status(500).json({ error: "Failed to process image upload: " + error.message });
     } finally {
-        // Clean up temporary files
-        if (tempFilePath) {
-            await fs.unlink(tempFilePath).catch(console.error);
-        }
-        if (tempDir) {
-            await fs.rmdir(tempDir).catch(console.error);
+      // Improved cleanup process
+        try {
+            if (tempFilePath) {
+                await fs.unlink(tempFilePath);
+            }
+            if (resizedFilePath) {
+                await fs.unlink(resizedFilePath);
+            }
+            if (tempDir) {
+                console.log("temp dir delete!");
+                await removeDir(tempDir);
+            }
+        } catch (cleanupError) {
+            console.error("Error during cleanup:", cleanupError);
         }
     }
 });
@@ -201,7 +220,7 @@ router.get('/get-image', async (req, res) => {
 router.post('/delete-image', async (req, res) => {
 
   const { username, task, date, password } = req.body;
-  console.log("password: " + password);
+  // console.log("password: " + password);
 
   try {
   //   // Find the post and verify password
@@ -220,7 +239,7 @@ router.post('/delete-image', async (req, res) => {
     console.log("post deleted!");
     // Find the user
     const user = await User.findOne({ username: username });
-    console.log(user);
+    // console.log(user);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
