@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2                 # set this to your preferred AWS region, e.g. us-west-1
-  EC2_HOST: ec2-13-124-200-195.ap-northeast-2.compute.amazonaws.com
+  EC2_HOST: ec2-3-36-178-88.ap-northeast-2.compute.amazonaws.com
 
 permissions:
   contents: read
@@ -36,8 +36,8 @@ jobs:
         USER: ubuntu  # or the appropriate username for your EC2 instance
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        scp -o StrictHostKeyChecking=no -i private_key -r ./* ${USER}@${HOST}:~/flaresolution/project/lunaEng
+        scp -o StrictHostKeyChecking=no -i private_key -r ./* ${USER}@${HOST}:~/lunaEng
         ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
-          sh ~/gitwork.sh
+          //sh ~/gitwork.sh
         '
         rm -f private_key
