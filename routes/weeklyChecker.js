@@ -9,7 +9,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import cron from 'node-cron';
-import { getNextMonday, formatDate } from '../utils/date.js';
+import { getCurrentMonday, getNextMonday, formatDate } from '../utils/date.js';
 import sharp from 'sharp';
 
 
@@ -281,23 +281,26 @@ router.post('/delete-image', async (req, res) => {
 
 
   // New Cron Weeks
-const addNewWeekToAllUsers = async () => {
+export const addNewWeekToAllUsers = async () => {
   try {
     const users = await User.find({});
-    const nextMonday = getNextMonday();
+    const nextMonday = getCurrentMonday();
 
     for (let user of users) {
       if (user.weeks.length > 0) {
         const lastWeek = user.weeks[user.weeks.length - 1];
         const newWeek = {
-          startDate: formatDate(nextMonday),
-          tasks: lastWeek.tasks.map(task => ({
-            ...task,
-            days: [false, false, false, false, false, false, false]
-          }))
+          startDate: nextMonday,
+          // tasks: lastWeek.tasks.map(task => ({
+          //   ...task,
+          //   days: [false, false, false, false, false, false, false]
+          // }))
+          tasks: [
+
+          ]
         };
 
-        if(lastWeek.startDate !== formatDate(nextMonday)){
+        if(lastWeek.startDate !== nextMonday){
           user.weeks.push(newWeek);
           await user.save();
         }else{
@@ -324,16 +327,6 @@ router.post('/add-new-week', async (req, res) => {
     res.status(500).json({ error: 'Failed to add new week to users' });
   }
 });
-
-
-// Cron job 설정 (매주 일요일 자정에 실행)
-cron.schedule('0 0 * * 0', async () => {
-  console.log('Running weekly task to add new week');
-  await addNewWeekToAllUsers();
-}, {
-  timezone: "Asia/Seoul" // 서버의 시간대에 맞게 설정
-});
-
 
 
 
