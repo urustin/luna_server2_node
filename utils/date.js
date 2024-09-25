@@ -14,7 +14,7 @@ const getCurrentKST = () => {
  */
 const getNextMonday = (date = getCurrentKST()) => {
     const resultDate = new Date(date);
-    resultDate.setDate(date.getDate() + (8 - date.getDay()) % 7 + 1);
+    resultDate.setDate(date.getDate() + (7 - date.getDay()) % 7 + 1);
     return formatDate(resultDate);
 }
 

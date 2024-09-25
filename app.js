@@ -8,6 +8,7 @@ import MongoStore from 'connect-mongo';
 
 import weeklyCheckerRoutes from './routes/weeklyChecker.js';
 import authRoutes from './routes/auth.js';
+import { initCronJobs } from './utils/cron.js';
 
 dotenv.config();
 
@@ -61,6 +62,8 @@ app.get('/luna', async (req, res) => {
   res.send("BBBB");
 });
 
+// cron
+initCronJobs();
 
 
 
