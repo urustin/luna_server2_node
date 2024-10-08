@@ -129,7 +129,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
             comments_enabled: 0,
             content_type: 0,
             is_family_safe: true,
-            thumb_size: '150r',
+            thumb_size: '350r',
         };
 
         const result = await imgbox(resizedFilePath, uploadOptions);
