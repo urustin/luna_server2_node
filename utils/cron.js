@@ -17,10 +17,10 @@ const updateEmail = async () => {
 
 
 export const initCronJobs = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 0 * * 1', async () => {
     console.log('Running weekly task to add new week');
     await updateEmail();
-    // await addNewWeekToAllUsers();
+    await addNewWeekToAllUsers();
   }, {
     timezone: "Asia/Seoul"
   });
