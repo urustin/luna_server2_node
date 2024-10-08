@@ -113,10 +113,11 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
 
         // Resize image to half of its original dimensions
         await sharp(tempFilePath)
-            .resize({
-                width: Math.round(metadata.width / 3),
-                height: Math.round(metadata.height / 3)
-            })
+        // 1/3 remove to front
+            // .resize({
+            //     width: Math.round(metadata.width / 3),
+            //     height: Math.round(metadata.height / 3)
+            // })
             .toFile(resizedFilePath);
 
 
